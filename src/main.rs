@@ -8,7 +8,6 @@ async fn main() {
     dotenv().ok();
     pretty_env_logger::init();
     log::info!("Starting command bot...");
-
     let bot = Bot::from_env();
 
     Command::repl(bot, answer).await;
@@ -51,14 +50,29 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             .await?
         }
         Command::Kill => {
+            let user_id = msg.from().unwrap().id;
+            let owner_id = std::env::var("OWNER_ID").unwrap_or("NO_OWNER_ID".to_owned());
+            if owner_id == "NO_OWNER_ID" {
+                log::warn!("No owner id found in .env file");
+            }
+            if owner_id != user_id.to_string() && owner_id != "NO_OWNER_ID" {
+                bot.send_message(msg.chat.id, "You are not the owner!")
+                    .await?;
+                return Ok(());
+            }
             bot.send_message(msg.chat.id, "Killing server...").await?;
+            log::info!("Killing server...");
             std::process::exit(0);
         }
         Command::Ytdl(url) => {
             bot.send_message(msg.chat.id, "Downloading...").await?;
             let fname = ytdl::ytdl(&url).await;
-            let file = InputFile::file(fname);
-            bot.send_audio(msg.chat.id, file).await?
+            let file = InputFile::file(&fname);
+            log::info!("Sending file: {:?}", &fname);
+            let send_audio = bot.send_audio(msg.chat.id, file).await?;
+            log::info!("Audio Sent... Cleaning file: {:?}", &fname);
+            std::fs::remove_file(&fname).unwrap();
+            send_audio
         }
     };
 
