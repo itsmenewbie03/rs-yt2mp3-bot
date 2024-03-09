@@ -65,14 +65,21 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             std::process::exit(0);
         }
         Command::Ytdl(url) => {
-            bot.send_message(msg.chat.id, "Downloading...").await?;
+            let ret = bot.send_message(msg.chat.id, "Downloading...").await?;
             let fname = ytdl::ytdl(&url).await;
             let file = InputFile::file(&fname);
             log::info!("Sending file: {:?}", &fname);
-            let send_audio = bot.send_audio(msg.chat.id, file).await?;
-            log::info!("Audio Sent... Cleaning file: {:?}", &fname);
-            std::fs::remove_file(&fname).unwrap();
-            send_audio
+            match bot.send_audio(msg.chat.id, file).await {
+                Ok(_) => {
+                    log::info!("Audio Sent... Cleaning file: {:?}", &fname);
+                    std::fs::remove_file(&fname).unwrap();
+                }
+                Err(e) => {
+                    log::error!("Error sending audio: {:?} will still delete the file", e);
+                    std::fs::remove_file(&fname).unwrap();
+                }
+            };
+            ret
         }
     };
 
