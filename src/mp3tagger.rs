@@ -1,14 +1,14 @@
-use std::fs::copy;
+use std::fs::remove_file;
 
 use id3::{frame::Picture, Tag, TagLike};
 
-use crate::ytdl::YTDLres;
+use crate::ytdl::{self, YTDLres};
 use reqwest::Client;
 
 pub async fn add_tags(video_data: YTDLres) -> std::path::PathBuf {
     let file_name = video_data.file_name;
-    let temp_file = std::env::temp_dir().join("music.mp3");
-    copy(file_name, &temp_file).unwrap();
+    let temp_file = std::env::temp_dir().join(&file_name);
+    ytdl::convert(&file_name, &temp_file);
     let mut tag = Tag::new();
     tag.set_artist(video_data.artist);
     tag.set_title(video_data.title);
@@ -20,6 +20,8 @@ pub async fn add_tags(video_data: YTDLres) -> std::path::PathBuf {
     });
     tag.write_to_path(&temp_file, id3::Version::Id3v24)
         .expect("FAILED TO WRITE TAGS TO TEMP FILE");
+    // NOTE: we gonna delete the file
+    remove_file(&file_name).expect("FAILED TO DELETE FILE");
     temp_file
 }
 

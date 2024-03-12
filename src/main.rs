@@ -3,7 +3,6 @@ pub mod ytdl;
 
 use dotenv::dotenv;
 use teloxide::{prelude::*, types::InputFile, utils::command::BotCommands};
-use url::Url;
 
 #[tokio::main]
 async fn main() {
