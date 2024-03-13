@@ -31,6 +31,8 @@ enum Command {
     Kill,
     #[command(description = "Download a youtube video")]
     Ytdl(String),
+    #[command(description = "Download a youtube video playlist.")]
+    Ytdlp(String),
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
@@ -93,6 +95,21 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                     ret
                 }
             }
+        }
+        Command::Ytdlp(url) => {
+            if url.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    "Please provide a url.\nUsage: /ytdlp <playlist_url>",
+                )
+                .await?;
+                return Ok(());
+            }
+            ytdl::ytdl_playlist(&url).await;
+            let ret = bot
+                .send_message(msg.chat.id, "This is not yet implemented")
+                .await?;
+            ret
         }
     };
 

@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use rusty_ytdl::*;
+use rusty_ytdl::{
+    search::{Playlist, PlaylistSearchOptions},
+    *,
+};
 
 #[derive(Debug)]
 pub struct YTDLres {
@@ -29,6 +32,16 @@ pub async fn ytdl(url: &str) -> YTDLres {
         artist,
         thumbnail: thumbnail.to_owned(),
     }
+}
+
+pub async fn ytdl_playlist(url: &str) {
+    let search_opts = PlaylistSearchOptions {
+        fetch_all: true,
+        limit: 10,
+        request_options: None,
+    };
+    let playlist = Playlist::get(url, Some(&search_opts)).await.unwrap();
+    println!("{:?}", playlist);
 }
 
 pub fn convert(input: &str, output: &PathBuf) {
