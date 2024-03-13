@@ -66,6 +66,11 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             std::process::exit(0);
         }
         Command::Ytdl(url) => {
+            if url.is_empty() {
+                bot.send_message(msg.chat.id, "Please provide a url.\nUsage: /ytdl <url>")
+                    .await?;
+                return Ok(());
+            }
             let ret = bot.send_message(msg.chat.id, "Downloading...").await?;
             let ytdl_res = ytdl::ytdl(&url).await;
             let tagged_file = mp3tagger::add_tags(ytdl_res).await;
@@ -76,13 +81,18 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 Ok(_) => {
                     log::info!("Audio Sent... Cleaning file: {:?}", &tagged_file);
                     std::fs::remove_file(&tagged_file).unwrap();
+                    ret
                 }
                 Err(e) => {
-                    log::error!("Error sending audio: {:?} will still delete the file", e);
+                    log::error!(
+                        "Error sending audio: {:?} will still delete the file {:?}",
+                        e,
+                        &tagged_file
+                    );
                     std::fs::remove_file(&tagged_file).unwrap();
+                    ret
                 }
-            };
-            ret
+            }
         }
     };
 
