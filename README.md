@@ -19,3 +19,7 @@ You must install the following in order to run this project.
 ```shell
 cargo run
 ```
+
+# Show your love
+
+If you love this project give it a star.
